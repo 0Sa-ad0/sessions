@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Session Clock</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', monospace;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 500px;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    
+    .clock {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+    
+    .time-line {
+      position: relative;
+      padding: 16px 20px;
+      border-bottom: 1px solid #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    
+    .time-line:last-child {
+      border-bottom: none;
+    }
+    
+    .time-line:hover {
+      background: #334155;
+    }
+    
+    .time-line::after {
+      content: "📋";
+      position: absolute;
+      right: 20px;
+      opacity: 0.6;
+    }
+    
+    .time {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #60a5fa;
+      margin-right: 12px;
+    }
+    
+    .date {
+      font-size: 1rem;
+      color: #94a3b8;
+    }
+    
+    .timezone {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TRADING SESSION CLOCK</h1>
+    
+    <div class="clock">
+      <div class="time-line" id="utc6">
+        <span class="time">12:05:51 PM</span>
+        <div>
+          <span class="date">01 January 2025 - Sunday</span>
+          <div class="timezone">UTC+6 (Dhaka)</div>
+        </div>
+      </div>
+      
+      <div class="time-line" id="utc">
+        <span class="time">06:05:51 AM</span>
+        <div>
+          <span class="date">01 January 2025 - Sunday</span>
+          <div class="timezone">UTC (London)</div>
+        </div>
+      </div>
+      
+      <div class="time-line" id="ny">
+        <span class="time">01:05:51 AM</span>
+        <div>
+          <span class="date">01 January 2025 - Sunday</span>
+          <div class="timezone">EST (New York)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Format date/time with leading zeros
+    const pad = (num) => num.toString().padStart(2, '0');
+    
+    // Format full date string
+    const formatDate = (date) => {
+      const options = { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric',
+        weekday: 'long'
+      };
+      return date.toLocaleDateString('en-US', options);
+    };
+    
+    // Format time (12-hour)
+    const formatTime = (date) => {
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const seconds = date.getSeconds();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      
+      return `${pad(displayHours)}:${pad(minutes)}:${pad(seconds)} ${ampm}`;
+    };
+    
+    // Create date in specific timezone
+    const getDateInTZ = (offset) => {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utc + (3600000 * offset));
+    };
+    
+    // Update all clocks
+    const updateClocks = () => {
+      // UTC+6 (Dhaka)
+      const dhaka = getDateInTZ(6);
+      document.getElementById('utc6').querySelector('.time').textContent = formatTime(dhaka);
+      document.getElementById('utc6').querySelector('.date').textContent = formatDate(dhaka);
+      
+      // UTC (London)
+      const utc = getDateInTZ(0);
+      document.getElementById('utc').querySelector('.time').textContent = formatTime(utc);
+      document.getElementById('utc').querySelector('.date').textContent = formatDate(utc);
+      
+      // New York (EST = UTC-5, EDT = UTC-4)
+      // Simple EST for trading context (adjust for DST if needed)
+      const ny = getDateInTZ(-5);
+      document.getElementById('ny').querySelector('.time').textContent = formatTime(ny);
+      document.getElementById('ny').querySelector('.date').textContent = formatDate(ny);
+    };
+    
+    // Copy to clipboard
+    document.querySelectorAll('.time-line').forEach(el => {
+      el.addEventListener('click', () => {
+        const time = el.querySelector('.time').textContent;
+        const date = el.querySelector('.date').textContent;
+        const tz = el.querySelector('.timezone').textContent;
+        
+        const text = `${time} - ${date} - ${tz}`;
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            // Visual feedback
+            const original = el.style.backgroundColor;
+            el.style.backgroundColor = '#10b98120';
+            setTimeout(() => {
+              el.style.backgroundColor = original;
+            }, 300);
+          });
+      });
+    });
+    
+    // Initialize and update every second
+    updateClocks();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
