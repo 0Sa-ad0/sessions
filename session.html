@@ -1,260 +1,241 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clock</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>World Clock — Fixed</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', monospace;
-      background: #0f172a;
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 20px;
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background:#0f172a;
+      color:#e6eef8;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:28px;
     }
-    .container { width: 100%; max-width: 580px; }
-    h1 {
-      text-align: center;
-      margin: 20px 0 24px;
-      color: #94a3b8;
-      font-weight: 400;
-      font-size: 1.4rem;
+
+    .container{width:100%;max-width:720px}
+    h1{font-weight:600;color:#cbd5e1;text-align:center;margin-bottom:18px}
+
+    .clock{background:#0b1220;border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    .time-line{position:relative;display:flex;flex-direction:column;padding:14px 18px 14px 64px;border-bottom:1px solid rgba(148,163,184,0.06);cursor:pointer;transition:background .15s,transform .12s}
+    .time-line:last-child{border-bottom:none}
+    .time-line:hover{background:rgba(255,255,255,0.02);transform:translateY(-1px)}
+    .time-line:focus{outline:3px solid rgba(96,165,250,0.12)}
+
+    .time-line::before{content:attr(data-icon);position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:1.2rem}
+    .time-header{display:flex;align-items:center;justify-content:space-between}
+    .time{font-size:1.35rem;font-weight:700;color:#60a5fa}
+    .date{margin-top:6px;color:#94a3b8;font-size:0.98rem}
+    .timezone{font-size:0.83rem;color:#94a3b8;margin-top:6px}
+
+    .market-status{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:6px;font-size:0.82rem}
+    .market-status.open{background:rgba(34,197,94,0.12);color:#34d399}
+    .market-status.closed{background:rgba(239,68,68,0.08);color:#fca5a5}
+
+    .meta-row{display:flex;gap:12px;align-items:center}
+
+    .info-box{margin-top:16px;padding:14px;border-radius:10px;background:#071025;color:#cbd5e1}
+    .info-box h2{font-size:1rem;margin-bottom:8px;color:#94a3b8}
+
+    /* small screens */
+    @media (max-width:520px){
+      .time{font-size:1.1rem}
+      .time-line{padding-left:56px}
     }
-    .clock { 
-      background: #1e293b; 
-      border-radius: 12px; 
-      padding: 20px; 
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    }
-    .time-line {
-      position: relative;
-      padding: 16px 20px 16px 52px;
-      border-bottom: 1px solid #334155;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-    }
-    .time-line:last-child { border-bottom: none; }
-    .time-line:hover { background: #334155; }
-    .time-line::before {
-      content: attr(data-icon);
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1.2rem;
-    }
-    .time-line::after {
-      content: "📋";
-      position: absolute;
-      right: 20px;
-      opacity: 0.6;
-      font-size: 0.9rem;
-    }
-    .time-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-    .time { font-size: 1.3rem; font-weight: 600; color: #60a5fa; }
-    .date { font-size: 1rem; color: #94a3b8; }
-    .timezone { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
-    .market-status {
-      margin-top: 6px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      display: inline-block;
-    }
-    .open { background: #16a34a20; color: #34d399; }
-    .closed { background: #dc262620; color: #fca5a5; }
-    .info-box {
-      background: #1e293b;
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 20px;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-    .info-box h2 {
-      color: #94a3b8;
-      margin-bottom: 12px;
-      font-size: 1.1rem;
-    }
-    .info-box p { margin-bottom: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>CLOCK</h1>
-    
-    <div class="clock">
-      <div class="time-line" id="utc6" data-icon="🇧🇩">
-        <div class="time-header">
-          <span class="time">12:05:51 PM</span>
-        </div>
-        <span class="date">01 January 2025 - Sunday</span>
-        <div class="timezone">UTC+6 (Dhaka)</div>
-        <span class="market-status">Markets follow UTC schedule</span>
+    <h1>World Clock</h1>
+
+    <div class="clock" role="list">
+      <!-- Use data attributes; JS will populate times and statuses -->
+      <div class="time-line" role="listitem" tabindex="0" id="tz-dhaka" data-tz="Asia/Dhaka" data-icon="🇧🇩" data-open-start="" data-open-end="">
+        <div class="time-header"><div class="time">—</div></div>
+        <div class="date">—</div>
+        <div class="timezone">—</div>
+        <div class="market-status" aria-live="polite">—</div>
       </div>
-      
-      <div class="time-line" id="utc" data-icon="🇬🇧">
-        <div class="time-header">
-          <span class="time">06:05:51 AM</span>
-        </div>
-        <span class="date">01 January 2025 - Sunday</span>
-        <div class="timezone">UTC (London)</div>
-        <span class="market-status open">London: Open 07:00–16:00 UTC</span>
+
+      <div class="time-line" role="listitem" tabindex="0" id="tz-utc" data-tz="UTC" data-icon="🕘" data-open-start="7" data-open-end="16">
+        <div class="time-header"><div class="time">—</div></div>
+        <div class="date">—</div>
+        <div class="timezone">—</div>
+        <div class="market-status" aria-live="polite">—</div>
       </div>
-      
-      <div class="time-line" id="ny" data-icon="🇺🇸">
-        <div class="time-header">
-          <span class="time">01:05:51 AM</span>
-        </div>
-        <span class="date">01 January 2025 - Sunday</span>
-        <div class="timezone">EST/EDT (New York)</div>
-        <span class="market-status closed">New York: Open 13:00–22:00 UTC</span>
+
+      <div class="time-line" role="listitem" tabindex="0" id="tz-ny" data-tz="America/New_York" data-icon="🇺🇸" data-open-start="13" data-open-end="22">
+        <div class="time-header"><div class="time">—</div></div>
+        <div class="date">—</div>
+        <div class="timezone">—</div>
+        <div class="market-status" aria-live="polite">—</div>
       </div>
-      
-      <div class="time-line" id="tokyo" data-icon="🇯🇵">
-        <div class="time-header">
-          <span class="time">03:05:51 PM</span>
-        </div>
-        <span class="date">01 January 2025 - Sunday</span>
-        <div class="timezone">JST (Tokyo)</div>
-        <span class="market-status closed">Tokyo: Open 00:00–09:00 UTC</span>
+
+      <div class="time-line" role="listitem" tabindex="0" id="tz-tokyo" data-tz="Asia/Tokyo" data-icon="🇯🇵" data-open-start="0" data-open-end="9">
+        <div class="time-header"><div class="time">—</div></div>
+        <div class="date">—</div>
+        <div class="timezone">—</div>
+        <div class="market-status" aria-live="polite">—</div>
       </div>
-      
-      <div class="time-line" id="sydney" data-icon="🇦🇺">
-        <div class="time-header">
-          <span class="time">05:05:51 PM</span>
-        </div>
-        <span class="date">01 January 2025 - Sunday</span>
-        <div class="timezone">AEST/AEDT (Sydney)</div>
-        <span class="market-status open">Sydney: Open 21:00–06:00 UTC</span>
+
+      <div class="time-line" role="listitem" tabindex="0" id="tz-sydney" data-tz="Australia/Sydney" data-icon="🇦🇺" data-open-start="21" data-open-end="6">
+        <div class="time-header"><div class="time">—</div></div>
+        <div class="date">—</div>
+        <div class="timezone">—</div>
+        <div class="market-status" aria-live="polite">—</div>
       </div>
     </div>
 
-    <div class="info-box">
-      <h2>Clock (UTC)</h2>
-      <p>• Sydney: &nbsp;&nbsp;&nbsp;21:00 – 06:00 UTC</p>
-      <p>• Tokyo: &nbsp;&nbsp;&nbsp;&nbsp;00:00 – 09:00 UTC</p>
-      <p>• London: &nbsp;&nbsp;&nbsp;&nbsp;07:00 – 16:00 UTC</p>
-      <p>• New York: &nbsp;13:00 – 22:00 UTC</p>
+    <div class="info-box" aria-hidden="false">
+      <h2>Market schedule (UTC)</h2>
+      <p>• Sydney: 21:00 – 06:00 UTC</p>
+      <p>• Tokyo: 00:00 – 09:00 UTC</p>
+      <p>• London: 07:00 – 16:00 UTC</p>
+      <p>• New York: 13:00 – 22:00 UTC</p>
     </div>
   </div>
 
   <script>
-    // Helper: pad numbers
-    const pad = n => String(n).padStart(2, '0');
-    
-    // Format date with full weekday/month
-    const formatDate = d => {
-      return new Intl.DateTimeFormat('en-US', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        weekday: 'long'
-      }).format(d);
-    };
+    // --- Utilities ---------------------------------------------------------
+    const pad = n => String(n).padStart(2,'0');
 
-    // Format 12-hour time
-    const formatTime = d => {
-      return new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      }).format(d);
-    };
-
-    // Get time in specific IANA timezone (auto DST-aware)
-    const getTimeInZone = (tz) => {
+    // Build a localized date/time using Intl parts so we don't rely on fragile parsing
+    function getPartsForZone(timeZone) {
       const now = new Date();
-      return new Date(now.toLocaleString('en-US', { timeZone: tz }));
-    };
-
-    // Check market status (UTC-based)
-    const getMarketStatus = (utcHour, openStart, openEnd) => {
-      // Handle sessions crossing midnight (e.g., Sydney: 21–6)
-      if (openStart > openEnd) {
-        return utcHour >= openStart || utcHour < openEnd ? 'open' : 'closed';
-      }
-      return utcHour >= openStart && utcHour < openEnd ? 'open' : 'closed';
-    };
-
-    // Update all clocks & statuses
-    const update = () => {
-      const now = new Date();
-      const utc = new Date(now.toUTCString());
-      const utcHour = utc.getUTCHours();
-
-      // UTC+6 (Dhaka) — fixed offset (no DST)
-      const dhaka = new Date(now.getTime() + (6 * 3600000));
-      document.getElementById('utc6').querySelector('.time').textContent = formatTime(dhaka);
-      document.getElementById('utc6').querySelector('.date').textContent = formatDate(dhaka);
-
-      // UTC (London time, but we show UTC directly)
-      document.getElementById('utc').querySelector('.time').textContent = formatTime(utc);
-      document.getElementById('utc').querySelector('.date').textContent = formatDate(utc);
-
-      // New York (auto DST: America/New_York)
-      const ny = getTimeInZone('America/New_York');
-      document.getElementById('ny').querySelector('.time').textContent = formatTime(ny);
-      document.getElementById('ny').querySelector('.date').textContent = formatDate(ny);
-      const nyStatus = getMarketStatus(utcHour, 13, 22);
-      document.getElementById('ny').querySelector('.market-status')
-        .className = `market-status ${nyStatus}`;
-      document.getElementById('ny').querySelector('.market-status').textContent = 
-        `New York: ${nyStatus === 'open' ? 'Open' : 'Closed'} 13:00–22:00 UTC`;
-
-      // Tokyo (Asia/Tokyo — no DST)
-      const tokyo = getTimeInZone('Asia/Tokyo');
-      document.getElementById('tokyo').querySelector('.time').textContent = formatTime(tokyo);
-      document.getElementById('tokyo').querySelector('.date').textContent = formatDate(tokyo);
-      const tokyoStatus = getMarketStatus(utcHour, 0, 9);
-      document.getElementById('tokyo').querySelector('.market-status')
-        .className = `market-status ${tokyoStatus}`;
-      document.getElementById('tokyo').querySelector('.market-status').textContent = 
-        `Tokyo: ${tokyoStatus === 'open' ? 'Open' : 'Closed'} 00:00–09:00 UTC`;
-
-      // Sydney (Australia/Sydney — auto DST)
-      const sydney = getTimeInZone('Australia/Sydney');
-      document.getElementById('sydney').querySelector('.time').textContent = formatTime(sydney);
-      document.getElementById('sydney').querySelector('.date').textContent = formatDate(sydney);
-      const sydneyStatus = getMarketStatus(utcHour, 21, 6); // crosses midnight
-      document.getElementById('sydney').querySelector('.market-status')
-        .className = `market-status ${sydneyStatus}`;
-      document.getElementById('sydney').querySelector('.market-status').textContent = 
-        `Sydney: ${sydneyStatus === 'open' ? 'Open' : 'Closed'} 21:00–06:00 UTC`;
-    };
-
-    // Copy on click
-    document.querySelectorAll('.time-line').forEach(el => {
-      el.addEventListener('click', () => {
-        const time = el.querySelector('.time').textContent;
-        const date = el.querySelector('.date').textContent;
-        const tz = el.querySelector('.timezone').textContent;
-        const status = el.querySelector('.market-status').textContent;
-        const text = `${time} - ${date} - ${tz}\n${status}`;
-        navigator.clipboard.writeText(text);
-        
-        // Visual feedback
-        const bg = el.style.backgroundColor;
-        el.style.backgroundColor = '#10b98120';
-        setTimeout(() => el.style.backgroundColor = bg, 300);
+      const fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        year: 'numeric', month: 'long', day: '2-digit', weekday: 'long',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
       });
-    });
+      // We will ask for parts instead of formatted string where possible
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        year: 'numeric', month: 'long', day: '2-digit', weekday: 'long',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).formatToParts(now).reduce((acc,p)=>{acc[p.type]=p.value;return acc;},{})
+      return parts;
+    }
 
-    // Start
-    update();
-    setInterval(update, 1000);
+    function formatDisplayDate(parts) {
+      // desired: "01 January 2025 - Sunday"
+      return `${parts.day} ${parts.month} ${parts.year} - ${parts.weekday}`;
+    }
+
+    function formatDisplayTimeForLocale(timeZone, hour12 = true) {
+      const now = new Date();
+      return new Intl.DateTimeFormat('en-US',{timeZone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12}).format(now);
+    }
+
+    // Get a Date object for the zone by constructing from parts (works reliably)
+    function dateForZone(timeZone){
+      const parts = getPartsForZone(timeZone);
+      // parts.hour is 00-23
+      // Construct a Date using the components interpreted as if in that timezone by using Date.UTC
+      // But we don't actually need a real Date offset; for UTC hour extraction we will compute using timezone conversion below
+      return parts;
+    }
+
+    // Calculate current UTC hour (0-23)
+    function currentUtcHour(){
+      return new Date().getUTCHours();
+    }
+
+    // Market status using UTC hour numbers (0-23) where openStart/openEnd are integers 0-23; if openStart>openEnd it crosses midnight
+    function isMarketOpenUtc(utcHour, openStart, openEnd){
+      if (openStart === '' || openEnd === '') return false;
+      openStart = Number(openStart); openEnd = Number(openEnd);
+      if (Number.isNaN(openStart) || Number.isNaN(openEnd)) return false;
+      if (openStart > openEnd) return (utcHour >= openStart) || (utcHour < openEnd);
+      return utcHour >= openStart && utcHour < openEnd;
+    }
+
+    // Get offset label like "UTC+6" or "GMT-5" using timeZoneName from Intl
+    function offsetLabel(timeZone){
+      try{
+        const s = new Intl.DateTimeFormat('en-US',{timeZone, timeZoneName:'short'}).format(new Date());
+        // format example: "1/1/2025, GMT+6" or "1/1/2025, GMT+10"
+        const parts = s.split(',').map(p=>p.trim());
+        return parts[parts.length-1];
+      }catch(e){
+        // fallback: try to compute offset number
+        const now = new Date();
+        const tzDate = new Date(now.toLocaleString('en-US',{timeZone}));
+        const diff = - (tzDate.getTime() - now.getTime()) / 3600000; // approximate
+        const sign = diff>=0?'+':'';
+        return `UTC${sign}${diff}`;
+      }
+    }
+
+    // --- Main update ------------------------------------------------------
+    function updateAll(){
+      const utcHour = currentUtcHour();
+      const items = Array.from(document.querySelectorAll('.time-line'));
+
+      items.forEach(el=>{
+        const tz = el.dataset.tz || 'UTC';
+        const parts = getPartsForZone(tz);
+        const time12 = formatDisplayTimeForLocale(tz,true);
+        el.querySelector('.time').textContent = time12;
+        el.querySelector('.date').textContent = formatDisplayDate(parts);
+        const offset = offsetLabel(tz);
+        el.querySelector('.timezone').textContent = `${offset} (${tz})`;
+
+        // market status: read data attributes
+        const start = el.dataset.openStart;
+        const end = el.dataset.openEnd;
+        const statusEl = el.querySelector('.market-status');
+        if (start !== undefined && end !== undefined && start !== '' && end !== ''){
+          const open = isMarketOpenUtc(utcHour, start, end);
+          statusEl.className = `market-status ${open ? 'open' : 'closed'}`;
+          statusEl.textContent = `${el.id.includes('tz-') ? el.id.replace('tz-','').toUpperCase() : ''}: ${open ? 'Open' : 'Closed'} ${pad(start)}:00–${pad(end)}:00 UTC`;
+        } else {
+          // generic note
+          statusEl.className = 'market-status';
+          statusEl.textContent = 'Markets follow UTC schedule';
+        }
+      });
+    }
+
+    // --- Copy to clipboard with keyboard support and visual feedback -------
+    function setupCopy(){
+      const els = document.querySelectorAll('.time-line');
+      els.forEach(el=>{
+        const copy = () => {
+          const time = el.querySelector('.time').textContent;
+          const date = el.querySelector('.date').textContent;
+          const tz = el.querySelector('.timezone').textContent;
+          const status = el.querySelector('.market-status').textContent;
+          const text = `${time} - ${date} - ${tz}\n${status}`;
+          if (navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(text).catch(()=>{});
+          } else {
+            // fallback
+            const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy')}catch(e){} ta.remove();
+          }
+
+          // short visual flash
+          const orig = el.style.background;
+          el.style.background = 'linear-gradient(90deg, rgba(16,185,129,0.08), rgba(16,185,129,0.04))';
+          setTimeout(()=> el.style.background = orig, 320);
+        };
+
+        el.addEventListener('click', copy);
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(); } });
+      });
+    }
+
+    // --- Init -------------------------------------------------------------
+    updateAll();
+    setupCopy();
+    // update every second (times & UTC-based market status)
+    setInterval(updateAll, 1000);
+
+    // graceful degradation: if Intl/timeZone unsupported, notify via console
+    try{ new Intl.DateTimeFormat('en-GB',{timeZone:'UTC'}).format() }catch(e){ console.warn('Your browser may not support Intl timeZone; times may be inaccurate.'); }
   </script>
 </body>
 </html>
